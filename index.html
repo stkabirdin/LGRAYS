@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<script src="jquery-3.2.1.min.js"></script>
+<script src="node_modules/chart.js/Chart.min.js"></script>
+<script src="node_modules/angular-chart.js/dist/angular-chart.min.js"></script>
+ <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style type="text/css">
+  body 
+  { 
+    background-color: lightblue;
+  }
+
+  #form
+  {
+    text-align: center;
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  
+
+</style>
+</head>
+
+
+<body>
+
+<div id = "form" ng-app="myApp" ng-controller="myCtrl">
+
+<select ng-model="selectedstate" ng-options="x for x in states">
+</select>
+<br/>
+<select ng-model="selectedcrop" ng-options="x for x in crops">
+	
+</select>
+<br>
+<input ng-click= "submitbutton()" type="submit" value="Submit">
+
+</div>
+<div id="myDiv" style="height: 400px; width: 100%;"></div>
+
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl',['$scope','$http',  function($scope, $http) {
+	
+	$http({
+    	method: 'GET',
+    	url: 'http://localhost:3000/getStates'
+   	}).then(function (success){
+   				$scope.states= success.data;
+   				},function (error){
+
+   				}
+   			);
+
+  $http({
+    	method: 'GET',
+    	url: 'http://localhost:3000/getCrops'
+   	}).then(function (success){
+   				$scope.crops= success.data;
+   				},function (error){
+
+   				}
+   			);
+
+  $scope.submitbutton=function(){
+	  var state=$scope.selectedstate;
+	  var crop= $scope.selectedcrop;
+    $scope.xaxis = [];
+    $scope.yaxis = [];
+	$http({
+    	method: 'GET',
+    	url: 'http://localhost:3000/processData?state='+state+'&crop='+crop
+   	}).then(function (success){
+        var pricejson = success.data;
+        for (var i = 0; i < pricejson.length; i++) {
+          $scope.xaxis.push(pricejson[i].x);
+          $scope.yaxis.push(pricejson[i].y);
+        }
+        TESTER = document.getElementById('myDiv');
+        var xaxis = $scope.xaxis;
+        var yaxis = $scope.yaxis;
+        Plotly.plot( TESTER, [{
+        x: xaxis,
+        y: yaxis }], {
+        margin: { t: 0 } } );
+        
+   				},function (error){
+
+   				}
+   			);
+    TESTER = document.getElementById('myDiv');
+    var xaxis = $scope.xaxis;
+    var yaxis = $scope.yaxis;
+    var layout = {
+      xaxis: {
+      autotick: false,
+      ticks: 'outside',
+      tick0: 0,
+      dtick: 1,
+      ticklen: 8,
+      tickwidth: 4,
+      tickcolor: '#000'
+      }
+    };
+    Plotly.newPlot( TESTER, [{
+    x: xaxis,
+    y: yaxis }], layout);
+   }
+
+}]);
+
+
+</script>
+
+</body>
+</html>
+
+
+
+
